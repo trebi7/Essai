@@ -1,0 +1,48 @@
+# Nom du workflow
+name: Importation_données
+
+# Quand ?
+on:
+  workflow_dispatch:
+
+
+# Que fait le workflow ?
+
+jobs:
+  importation:
+    permissions:
+      contents: write
+      pages: write
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        
+      - name: install R
+        uses: r-lib/actions/setup-r@v2
+        
+      - name: Install packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::tidyverse
+            any::robotoolbox
+            any::janitor
+            
+      - name: importation données
+        run: Rscript -e 'source("Importation.R")'
+        env:
+          MY_TOKEN: ${{ secrets.MY_TOKEN_GHA }}
+          MY_UID: ${{ secrets.MY_UID_GHA }}
+          MY_USER: ${{ secrets.MY_USER_GHA }}
+          MY_PASSWORD: ${{ secrets.MY_PASSWORD_GHA}}
+          
+      - name: commit results
+        run: |
+          git config --local user.email "armanddavy7@gmail.com"
+          git config --local user.name "trebi7"
+          git add mydf.rds
+          git commit -m 'Data updated' || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
+        
