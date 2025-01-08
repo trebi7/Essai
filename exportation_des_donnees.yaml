@@ -1,0 +1,50 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-pdf:
+    permissions:
+      contents: write
+      pages: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install R
+      uses: r-lib/actions/setup-r@v2
+
+    - name: Install packages
+      uses: r-lib/actions/setup-r-dependencies@v2
+      with:
+          packages: |
+            any::knitr
+            any::rmarkdown
+            any::downlit
+            any::xml2
+            any::gt
+            any::tidyverse
+
+    - name: Setup Quarto
+      uses: quarto-dev/quarto-actions/setup@v2
+      with:
+        tinytex: true
+    - name: Render Quarto Project
+      uses: quarto-dev/quarto-actions/render@v2
+      with:
+        to: pdf
+        path: point_de_collecte.qmd
+    
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: point_de_collecte.pdf
+        path: point_de_collecte.pdf
+
+    - name: Commit results
+      run: |
+          git config --local user.email "armanddavy7@gmail.com"
+          git config --local user.name "trebi7"
+          git add point_de_collecte.pdf
+          git commit -m 'Rapport updated' || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
+          
